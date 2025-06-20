@@ -1,0 +1,230 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+</script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPS Counter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #282a36; /* Dracula background */
+            color: #f8f8f2; /* Dracula foreground */
+        }
+        #counter-container {
+            text-align: center;
+            background-color: #44475a; /* Dracula current line */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        #click-area {
+            width: 200px;
+            height: 200px;
+            background-color: #50fa7b; /* Dracula green */
+            border: none;
+            border-radius: 10px;
+            color: #282a36; /* Dracula background for contrast */
+            font-size: 24px;
+            cursor: pointer;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        #click-area:hover {
+            background-color: #42d667; /* Slightly darker green */
+        }
+        #result {
+            font-size: 24px;
+            margin: 20px 0;
+            color: #f8f8f2; /* Dracula foreground */
+        }
+        .time-btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: #bd93f9; /* Dracula purple */
+            color: #282a36; /* Dracula background for contrast */
+            cursor: pointer;
+        }
+        .time-btn:hover {
+            background-color: #a17de6; /* Slightly darker purple */
+        }
+        #reset-btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: #ff79c6; /* Dracula pink */
+            color: #282a36; /* Dracula background for contrast */
+            cursor: pointer;
+        }
+        #reset-btn:hover {
+            background-color: #e65aad; /* Slightly darker pink */
+        }
+        #credit {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 14px;
+            color: #6272a4; /* Dracula comment */
+        }
+    </style>
+</head>
+<body>
+    <div id="counter-container">
+        <h1>CPS Counter</h1>
+        <div id="click-area">Click Here!</div>
+        <div id="result">Clicks: 0 | CPS: 0.00 | Time: 0s</div>
+        <div>
+            <button class="time-btn" onclick="startTest(5)">5 Seconds</button>
+            <button class="time-btn" onclick="startTest(15)">15 Seconds</button>
+            <button class="time-btn" onclick="startTest(60)">60 Seconds</button>
+            <button id="reset-btn" onclick="resetTest()">Reset</button>
+        </div>
+    </div>
+    <div id="credit">by: Ars-byte</div>
+
+    <script>
+        let clicks = 0;
+        let startTime;
+        let testDuration = 0;
+        let timerId;
+        let isTestRunning = false;
+
+        const clickArea = document.getElementById('click-area');
+        const resultDiv = document.getElementById('result');
+
+        clickArea.addEventListener('click', () => {
+            if (isTestRunning) {
+                clicks++;
+                updateResult();
+            }
+        });
+
+        function startTest(duration) {
+            if (!isTestRunning) {
+                testDuration = duration;
+                clicks = 0;
+                isTestRunning = true;
+                startTime = Date.now();
+                clickArea.textContent = 'Click!';
+                updateResult();
+                timerId = setInterval(updateTimer, 100);
+            }
+        }
+
+        function resetTest() {
+            clearInterval(timerId);
+            clicks = 0;
+            testDuration = 0;
+            isTestRunning = false;
+            clickArea.textContent = 'Click Here!';
+            updateResult();
+        }
+
+        function updateTimer() {
+            const elapsed = (Date.now() - startTime) / 1000;
+            if (elapsed >= testDuration) {
+                clearInterval(timerId);
+                isTestRunning = false;
+                clickArea.textContent = 'Test Done!';
+            }
+            updateResult();
+        }
+
+        function updateResult() {
+            const elapsed = testDuration ? Math.min((Date.now() - startTime) / 1000, testDuration) : 0;
+            const cps = elapsed > 0 ? (clicks / elapsed).toFixed(2) : 0;
+            resultDiv.textContent = `Clicks: ${clicks} | CPS: ${cps} | Time: ${elapsed.toFixed(1)}s`;
+        }
+    </script>
+</body>
+</html>
